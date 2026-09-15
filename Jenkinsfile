@@ -67,14 +67,14 @@ pipeline {
         stage('Deploy') {
             agent {
                 docker {
-                image 'alpine'
-                reuseNode true
+                    image 'alpine'
+                    reuseNode true
                 }
             }
             steps {
                 echo 'Mock deployment was successful!'
             }
-}
+        }
 
         stage('E2E') {
             agent {
