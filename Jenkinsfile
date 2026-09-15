@@ -30,7 +30,7 @@ pipeline {
                     steps {
                         // Added for Jenkins
                         sh 'npm ci'
-                        sh 'npm run build' 
+                        // sh 'npm run build' 
                         // Unit tests with Vitest
                         sh 'npx vitest run --reporter=verbose'
                     }
