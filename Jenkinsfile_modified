@@ -1,72 +1,86 @@
 pipeline {
     agent any
-    
+
     options {
         ansiColor('xterm')
     }
 
     stages {
-        stage('build') {
+        stage('Install dependencies') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
+                    reuseNode true
+                    args '--ipc=host'
                 }
             }
             steps {
+                sh 'node --version'
+                sh 'npm --version'
                 sh 'npm ci'
+            }
+        }
+
+        stage('Build') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
+                    reuseNode true
+                    args '--ipc=host'
+                }
+            }
+            steps {
                 sh 'npm run build'
             }
         }
 
-        stage('test') {
+        stage('Test') {
             parallel {
-                stage('unit tests') {
-                    agent {
-                        docker {
-                            image 'node:22-alpine'
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        // Added for Jenkins
-                        sh 'npm ci'
-                        sh 'npm run build' 
-                        // Unit tests with Vitest
-                        sh 'npx vitest run --reporter=verbose'
-                    }
-                }
-                stage('integration tests') {
+                stage('Unit tests') {
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
                             reuseNode true
+                            args '--ipc=host'
                         }
                     }
                     steps {
-                    sh 'npx playwright test'
-                    }    
+                        sh 'npx vitest run --reporter=verbose'
+                    }
+                }
 
+                stage('Integration tests') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
+                            reuseNode true
+                            args '--ipc=host'
+                        }
+                    }
+                    steps {
+                        sh 'npx playwright test'
+                    }
                 }
             }
         }
 
-        stage('deploy') {
+        stage('Deploy') {
             agent {
                 docker {
                     image 'alpine'
                 }
             }
             steps {
-                // Mock deployment which does nothing
                 echo 'Mock deployment was successful!'
             }
         }
 
-        stage('e2e') {
+        stage('E2E') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
                     reuseNode true
+                    args '--ipc=host'
                 }
             }
             environment {
@@ -75,6 +89,12 @@ pipeline {
             steps {
                 sh 'npx playwright test'
             }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
         }
     }
 }
