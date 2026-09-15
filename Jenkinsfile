@@ -95,7 +95,26 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
+            publishHTML([
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'reports-e2e/html',
+                reportFiles: 'index.html',
+                reportName: 'Playwright HTML Report',
+                reportTitles: '',
+                useWrapperFileDirectly: false
+            ])
+            archiveArtifacts(
+                artifacts: 'reports-e2e/html/**/*',
+                allowEmptyArchive: true,
+                fingerprint: false
+            )
+            junit(
+                testResults: 'reports-e2e/junit.xml',
+                allowEmptyResults: true,
+                stdioRetention: 'ALL'
+            )   
         }
     }
 }
