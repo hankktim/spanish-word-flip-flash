@@ -65,30 +65,37 @@ pipeline {
         }
 
         stage('Deploy') {
-        agent {
-            docker {
+            agent {
+                docker {
                 image 'alpine'
                 reuseNode true
+                }
             }
-        }
-        steps {
-            echo 'Mock deployment was successful!'
+            steps {
+                echo 'Mock deployment was successful!'
+            }
+}
+
+        stage('E2E') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
+                    reuseNode true
+                    args '--ipc=host'
+                }
+            }
+            environment {
+                E2E_BASE_URL = 'https://spanish-cards.netlify.app/'
+            }
+            steps {
+                sh 'npx playwright test'
+            }
         }
     }
 
-    stage('E2E') {
-        agent {
-            docker {
-                image 'mcr.microsoft.com/playwright:v1.54.2-jammy'
-                reuseNode true
-                args '--ipc=host'
-            }
-        }
-        environment {
-            E2E_BASE_URL = 'https://spanish-cards.netlify.app/'
-        }
-        steps {
-            sh 'npx playwright test'
+    post {
+        always {
+            archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
         }
     }
 }
