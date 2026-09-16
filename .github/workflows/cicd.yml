@@ -93,8 +93,9 @@ jobs:
         options: --user 1001
       env:
       E2E_BASE_URL: https://spanish-cards.netlify.app/
-      steps:
-      - uses: actions/checkout@v4
+    steps:
+      - # uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install deps
         run: npm ci
       - name: Run Playwright E2E
